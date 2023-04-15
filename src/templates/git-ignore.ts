@@ -1,5 +1,3 @@
-export default `
-node_modules
+export default `node_modules
 
-dist
-`;
+dist`;

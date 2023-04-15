@@ -1,15 +1,29 @@
 import fs from "fs/promises";
+import path from "path";
+
 import inquirer from "inquirer";
 import chalk from "chalk";
 import { exec, execSync } from "child_process";
-import path from "path";
+
 import gitIgnore from "./templates/git-ignore.js";
+import prettierrc from "./templates/prettierrc.js";
+import lintstagedrc from "./templates/lintstagedrc.js";
+import commitlintrc from "./templates/commitlintrc.js";
+import { typescriptConfig, javascriptConfig } from "./templates/eslintrc.js";
 
 interface Answers {
   projectName: string;
   packageManager: "npm" | "yarn" | "pnpm";
   typescript: "yes" | "no";
 }
+
+let projectDirectory: string;
+
+const packageRunner = {
+  npm: "npx",
+  yarn: "yarn",
+  pnpm: "pnpx",
+};
 
 async function main() {
   const questions = [
@@ -32,15 +46,20 @@ async function main() {
   ];
 
   const answers = await inquirer.prompt<Answers>(questions);
-  const projectDirectory = path.resolve(process.cwd(), answers.projectName);
+  const useTypescript = answers.typescript === "yes";
+  projectDirectory = path.resolve(process.cwd(), answers.projectName);
 
-  initializeVite(answers, projectDirectory);
-  initializeGit(projectDirectory);
+  initVite(answers, useTypescript);
+  installDependencies(answers, useTypescript);
+  initGit();
+  initPrettier();
+  initEslint(useTypescript);
+  initHusky(answers.packageManager);
+  initLintStaged();
+  initCommitLint();
 }
 
-function initializeVite(answers: Answers, directory: string) {
-  const useTypescript = answers.typescript === "yes";
-  console.log(chalk.green("Creating Vite React project..."));
+function initVite(answers: Answers, useTypescript: boolean) {
   execSync(
     `${answers.packageManager} create vite${
       answers.packageManager === "npm" ? "@latest" : ""
@@ -48,18 +67,65 @@ function initializeVite(answers: Answers, directory: string) {
       answers.packageManager === "npm" ? "--" : ""
     } --template react${useTypescript ? "-ts" : ""}`
   );
-  execSync(`${answers.packageManager} install`, { cwd: directory });
-  console.log(chalk.green("Project created successfully!"));
+  executeInProjectDirectory(`${answers.packageManager} install`, true);
 }
 
-function initializeGit(directory: string) {
-  console.log(chalk.green("Initializing git repository..."));
-  exec("git init", { cwd: directory }, () => {
-    exec("touch .gitignore", { cwd: directory }, () => {
-      fs.writeFile(path.resolve(directory, ".gitignore"), gitIgnore);
-      console.log(chalk.green("Git repository initialized successfully!"));
-    });
-  });
+function installDependencies(answers: Answers, useTypescript: boolean) {
+  executeInProjectDirectory(
+    `${answers.packageManager} ${
+      answers.packageManager === "yarn" ? "add" : "install"
+    } -D prettier eslint husky lint-staged "@commitlint/cli" "@commitlint/config-conventional ${
+      useTypescript
+        ? "@typescript-eslint/parser @typescript-eslint/eslint-plugin"
+        : ""
+    }`,
+    true
+  );
+}
+
+function initGit() {
+  executeInProjectDirectory("git init");
+  fs.writeFile(path.resolve(projectDirectory, ".gitignore"), gitIgnore);
+}
+
+function initPrettier() {
+  fs.writeFile(path.resolve(projectDirectory, ".prettierrc.js"), prettierrc);
+}
+
+function initEslint(useTypescript: boolean) {
+  fs.writeFile(
+    path.resolve(projectDirectory, ".eslintrc.js"),
+    useTypescript ? typescriptConfig : javascriptConfig
+  );
+}
+
+function initHusky(packageManager: Answers["packageManager"]) {
+  executeInProjectDirectory(`${packageRunner[packageManager]} husky install`);
+  executeInProjectDirectory(
+    `${packageRunner[packageManager]} husky add .husky/pre-commit "${packageRunner[packageManager]} lint-staged"`
+  );
+  executeInProjectDirectory(
+    `${packageRunner[packageManager]} husky add .husky/commit-msg "${packageRunner[packageManager]} lint-staged"`
+  );
+}
+
+function initLintStaged() {
+  fs.writeFile(path.resolve(projectDirectory, ".lintstagedrc"), lintstagedrc);
+}
+
+function initCommitLint() {
+  fs.writeFile(
+    path.resolve(projectDirectory, ".commitlintrc.ts"),
+    commitlintrc
+  );
+}
+
+function executeInProjectDirectory(command: string, sync: boolean = false) {
+  if (sync) {
+    exec(command, { cwd: projectDirectory });
+  } else {
+    execSync(command, { cwd: projectDirectory });
+  }
 }
 
 main();
