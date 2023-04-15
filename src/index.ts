@@ -9,6 +9,8 @@ import prettierrc from "./templates/prettierrc.js";
 import lintstagedrc from "./templates/lintstagedrc.js";
 import commitlintrc from "./templates/commitlintrc.js";
 import { typescriptConfig, javascriptConfig } from "./templates/eslintrc.js";
+import mainTsx from "./templates/mainTsx.js";
+import AppTsx from "./templates/AppTsx.js";
 
 interface Answers {
   projectName: string;
@@ -67,6 +69,20 @@ function initVite(answers: Answers, useTypescript: boolean) {
     } --template react${useTypescript ? "-ts" : ""}`
   );
   executeInProjectDirectory(`${answers.packageManager} install`, true);
+  deleteViteBoilerPlate();
+}
+
+async function deleteViteBoilerPlate() {
+  fs.rm(path.resolve(projectDirectory, "src/App.tsx"));
+  fs.rm(path.resolve(projectDirectory, "src/main.tsx"));
+  fs.rm(path.resolve(projectDirectory, "src/App.css"));
+  fs.rm(path.resolve(projectDirectory, "src/index.css"));
+  await fs.rm(path.resolve(projectDirectory, "src/assets/react.svg"));
+  fs.rmdir(path.resolve(projectDirectory, "src/assets"));
+  await fs.rm(path.resolve(projectDirectory, "public/vite.svg"));
+  fs.rmdir(path.resolve(projectDirectory, "public"));
+  fs.writeFile(path.resolve(projectDirectory, "src/App.tsx"), AppTsx);
+  fs.writeFile(path.resolve(projectDirectory, "src/main.tsx"), mainTsx);
 }
 
 function installDependencies(answers: Answers, useTypescript: boolean) {
