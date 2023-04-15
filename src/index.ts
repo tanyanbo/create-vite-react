@@ -2,7 +2,6 @@ import fs from "fs/promises";
 import path from "path";
 
 import inquirer from "inquirer";
-import chalk from "chalk";
 import { exec, execSync } from "child_process";
 
 import gitIgnore from "./templates/git-ignore.js";
@@ -97,15 +96,21 @@ function initEslint(useTypescript: boolean) {
     path.resolve(projectDirectory, ".eslintrc.json"),
     useTypescript ? typescriptConfig : javascriptConfig
   );
+  fs.writeFile(
+    path.resolve(projectDirectory, ".eslintignore"),
+    `node_modules
+commitlint.config.js
+vite.config.ts`
+  );
 }
 
 function initHusky(packageManager: Answers["packageManager"]) {
   executeInProjectDirectory(`${packageRunner[packageManager]} husky install`);
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/pre-commit "${packageRunner[packageManager]} lint-staged"`
+    `${packageRunner[packageManager]} husky add .husky/pre-commit "pnpm lint-staged"`
   );
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/commit-msg '${packageRunner[packageManager]} --no -- commitlint --edit "$1"'`
+    `${packageRunner[packageManager]} husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'`
   );
 }
 
