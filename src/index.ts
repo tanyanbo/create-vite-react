@@ -15,6 +15,7 @@ import AppTsx from "./templates/AppTsx.js";
 interface Answers {
   projectName: string;
   packageManager: "npm" | "yarn" | "pnpm";
+  css: "less" | "sass" | "stylus" | "none";
   typescript: "yes" | "no";
 }
 
@@ -37,6 +38,12 @@ async function main() {
       message: "Which package manager do you want to use?",
       type: "list",
       choices: ["npm", "yarn", "pnpm"],
+    },
+    {
+      name: "css",
+      message: "Which css preprocessor do you want to use?",
+      type: "list",
+      choices: ["less", "sass", "stylus", "none"],
     },
     {
       name: "typescript",
@@ -93,7 +100,7 @@ function installDependencies(answers: Answers, useTypescript: boolean) {
       useTypescript
         ? "@typescript-eslint/parser @typescript-eslint/eslint-plugin"
         : ""
-    }`,
+    } ${answers.css !== "none" ? answers.css : ""}`,
     true
   );
 }
