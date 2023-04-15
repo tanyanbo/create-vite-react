@@ -120,7 +120,7 @@ function initLintStaged() {
 
 function initCommitLint() {
   fs.writeFile(
-    path.resolve(projectDirectory, "commitlint.config.js"),
+    path.resolve(projectDirectory, ".commitlintrc.json"),
     commitlintrc
   );
 }
