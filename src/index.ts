@@ -71,7 +71,6 @@ function initVite(answers: Answers, useTypescript: boolean) {
 }
 
 function installDependencies(answers: Answers, useTypescript: boolean) {
-  console.log(chalk.green(`Installing dependencies in ${projectDirectory}`));
   executeInProjectDirectory(
     `${answers.packageManager} ${
       answers.packageManager === "yarn" ? "add" : "install"
@@ -82,7 +81,6 @@ function installDependencies(answers: Answers, useTypescript: boolean) {
     }`,
     true
   );
-  console.log(chalk.green(`finished installing dependencies`));
 }
 
 function initGit() {
@@ -104,10 +102,10 @@ function initEslint(useTypescript: boolean) {
 function initHusky(packageManager: Answers["packageManager"]) {
   executeInProjectDirectory(`${packageRunner[packageManager]} husky install`);
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/pre-commit "yarn lint-staged"`
+    `${packageRunner[packageManager]} husky add .husky/pre-commit "${packageRunner[packageManager]} lint-staged"`
   );
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/commit-msg 'yarn --no -- commitlint --edit "$1"'`
+    `${packageRunner[packageManager]} husky add .husky/commit-msg '${packageRunner[packageManager]} --no -- commitlint --edit "$1"'`
   );
 }
 
