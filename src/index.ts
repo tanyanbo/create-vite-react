@@ -33,6 +33,7 @@ async function main() {
     {
       name: "projectName",
       message: "What is the name of your project?",
+      default: "vite-react-app",
     },
     {
       name: "packageManager",
@@ -83,7 +84,6 @@ function initVite(answers: Answers, useTypescript: boolean) {
 
 async function deleteViteBoilerPlate() {
   try {
-    console.log("deleting vite boilerplate files...");
     fs.rm(path.resolve(projectDirectory, "src/App.tsx"));
     fs.rm(path.resolve(projectDirectory, "src/main.tsx"));
     fs.rm(path.resolve(projectDirectory, "src/App.css"));
@@ -92,8 +92,6 @@ async function deleteViteBoilerPlate() {
     fs.rmdir(path.resolve(projectDirectory, "src/assets"));
     await fs.rm(path.resolve(projectDirectory, "public/vite.svg"));
     fs.rmdir(path.resolve(projectDirectory, "public"));
-  } catch {
-    console.log("failed to delete vite boilerplate files");
   } finally {
     fs.writeFile(path.resolve(projectDirectory, "src/App.tsx"), AppTsx);
     fs.writeFile(path.resolve(projectDirectory, "src/main.tsx"), mainTsx);
