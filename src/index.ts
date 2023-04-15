@@ -105,7 +105,7 @@ function initHusky(packageManager: Answers["packageManager"]) {
     `${packageRunner[packageManager]} husky add .husky/pre-commit "${packageRunner[packageManager]} lint-staged"`
   );
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/commit-msg "${packageRunner[packageManager]} lint-staged"`
+    `${packageRunner[packageManager]} husky add .husky/commit-msg '${packageRunner[packageManager]} --no -- commitlint --edit "$1"'`
   );
 }
 
