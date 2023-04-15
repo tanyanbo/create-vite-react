@@ -9,6 +9,7 @@ import prettierrc from "./templates/prettierrc.js";
 import lintstagedrc from "./templates/lintstagedrc.js";
 import commitlintrc from "./templates/commitlintrc.js";
 import { typescriptConfig, javascriptConfig } from "./templates/eslintrc.js";
+import stylelintrc from "./templates/stylelintrc.js";
 import mainTsx from "./templates/mainTsx.js";
 import AppTsx from "./templates/AppTsx.js";
 
@@ -37,7 +38,7 @@ async function main() {
       name: "packageManager",
       message: "Which package manager do you want to use?",
       type: "list",
-      choices: ["npm", "yarn", "pnpm"],
+      choices: ["pnpm", "yarn", "npm"],
     },
     {
       name: "css",
@@ -62,6 +63,7 @@ async function main() {
   initGit();
   initPrettier();
   initEslint(useTypescript);
+  initStylelint();
   initHusky(answers.packageManager);
   initLintStaged();
   initCommitLint();
@@ -80,23 +82,29 @@ function initVite(answers: Answers, useTypescript: boolean) {
 }
 
 async function deleteViteBoilerPlate() {
-  fs.rm(path.resolve(projectDirectory, "src/App.tsx"));
-  fs.rm(path.resolve(projectDirectory, "src/main.tsx"));
-  fs.rm(path.resolve(projectDirectory, "src/App.css"));
-  fs.rm(path.resolve(projectDirectory, "src/index.css"));
-  await fs.rm(path.resolve(projectDirectory, "src/assets/react.svg"));
-  fs.rmdir(path.resolve(projectDirectory, "src/assets"));
-  await fs.rm(path.resolve(projectDirectory, "public/vite.svg"));
-  fs.rmdir(path.resolve(projectDirectory, "public"));
-  fs.writeFile(path.resolve(projectDirectory, "src/App.tsx"), AppTsx);
-  fs.writeFile(path.resolve(projectDirectory, "src/main.tsx"), mainTsx);
+  try {
+    console.log("deleting vite boilerplate files...");
+    fs.rm(path.resolve(projectDirectory, "src/App.tsx"));
+    fs.rm(path.resolve(projectDirectory, "src/main.tsx"));
+    fs.rm(path.resolve(projectDirectory, "src/App.css"));
+    fs.rm(path.resolve(projectDirectory, "src/index.css"));
+    await fs.rm(path.resolve(projectDirectory, "src/assets/react.svg"));
+    fs.rmdir(path.resolve(projectDirectory, "src/assets"));
+    await fs.rm(path.resolve(projectDirectory, "public/vite.svg"));
+    fs.rmdir(path.resolve(projectDirectory, "public"));
+  } catch {
+    console.log("failed to delete vite boilerplate files");
+  } finally {
+    fs.writeFile(path.resolve(projectDirectory, "src/App.tsx"), AppTsx);
+    fs.writeFile(path.resolve(projectDirectory, "src/main.tsx"), mainTsx);
+  }
 }
 
 function installDependencies(answers: Answers, useTypescript: boolean) {
   executeInProjectDirectory(
     `${answers.packageManager} ${
       answers.packageManager === "yarn" ? "add" : "install"
-    } -D prettier eslint husky lint-staged @commitlint/cli @commitlint/config-conventional ${
+    } -D prettier eslint husky lint-staged @commitlint/cli @commitlint/config-conventional stylelint stylelint-config-standard ${
       useTypescript
         ? "@typescript-eslint/parser @typescript-eslint/eslint-plugin"
         : ""
@@ -124,6 +132,13 @@ function initEslint(useTypescript: boolean) {
     `node_modules
 commitlint.config.js
 vite.config.ts`
+  );
+}
+
+function initStylelint() {
+  fs.writeFile(
+    path.resolve(projectDirectory, ".stylelintrc.json"),
+    stylelintrc
   );
 }
 
