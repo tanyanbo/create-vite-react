@@ -71,16 +71,18 @@ function initVite(answers: Answers, useTypescript: boolean) {
 }
 
 function installDependencies(answers: Answers, useTypescript: boolean) {
+  console.log(chalk.green(`Installing dependencies in ${projectDirectory}`));
   executeInProjectDirectory(
     `${answers.packageManager} ${
       answers.packageManager === "yarn" ? "add" : "install"
-    } -D prettier eslint husky lint-staged "@commitlint/cli" "@commitlint/config-conventional ${
+    } -D prettier eslint husky lint-staged @commitlint/cli @commitlint/config-conventional ${
       useTypescript
         ? "@typescript-eslint/parser @typescript-eslint/eslint-plugin"
         : ""
     }`,
     true
   );
+  console.log(chalk.green(`finished installing dependencies`));
 }
 
 function initGit() {
@@ -89,12 +91,12 @@ function initGit() {
 }
 
 function initPrettier() {
-  fs.writeFile(path.resolve(projectDirectory, ".prettierrc.js"), prettierrc);
+  fs.writeFile(path.resolve(projectDirectory, ".prettierrc.json"), prettierrc);
 }
 
 function initEslint(useTypescript: boolean) {
   fs.writeFile(
-    path.resolve(projectDirectory, ".eslintrc.js"),
+    path.resolve(projectDirectory, ".eslintrc.json"),
     useTypescript ? typescriptConfig : javascriptConfig
   );
 }
@@ -102,10 +104,10 @@ function initEslint(useTypescript: boolean) {
 function initHusky(packageManager: Answers["packageManager"]) {
   executeInProjectDirectory(`${packageRunner[packageManager]} husky install`);
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/pre-commit "${packageRunner[packageManager]} lint-staged"`
+    `${packageRunner[packageManager]} husky add .husky/pre-commit "yarn lint-staged"`
   );
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/commit-msg '${packageRunner[packageManager]} --no -- commitlint --edit "$1"'`
+    `${packageRunner[packageManager]} husky add .husky/commit-msg 'yarn --no -- commitlint --edit "$1"'`
   );
 }
 
@@ -115,7 +117,7 @@ function initLintStaged() {
 
 function initCommitLint() {
   fs.writeFile(
-    path.resolve(projectDirectory, ".commitlintrc.ts"),
+    path.resolve(projectDirectory, "commitlint.config.js"),
     commitlintrc
   );
 }

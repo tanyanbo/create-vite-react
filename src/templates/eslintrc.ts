@@ -1,4 +1,4 @@
-export const typescriptConfig = `module.exports = {
+export const typescriptConfig = `{
   extends: ['eslint:recommended', 'plugin:@typescript-eslint/recommended'],
   parser: '@typescript-eslint/parser',
   plugins: ['@typescript-eslint'],
@@ -7,9 +7,9 @@ export const typescriptConfig = `module.exports = {
     browser: true,
     'es2021': true,
   }
-};`;
+}`;
 
-export const javascriptConfig = `module.exports = {
+export const javascriptConfig = `{
   "env": {
       "browser": true,
       "es2021": true
@@ -19,5 +19,5 @@ export const javascriptConfig = `module.exports = {
       "ecmaVersion": "latest",
       "sourceType": "module"
   },
-  root: true,
+  root: true
 }`;
