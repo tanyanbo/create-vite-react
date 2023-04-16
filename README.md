@@ -17,7 +17,12 @@ Create Vite + React App is a command-line interface (CLI) tool that helps you qu
 
 ### Installation
 
-This CLI tool requires Node.js (>=14.0.0) to run. You can clone the repo to use the CLI.
+This CLI tool requires Node.js (>=14.0.0) to run. You can clone the repo to use the CLI and run build to use the CLI.
+
+```sh
+git clone
+pnpm build
+```
 
 ### Usage
 
