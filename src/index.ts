@@ -31,10 +31,9 @@ program
   .option("--no-typescript", "do not use typescript")
   .action((name, options) => {
     run({ name, ...options });
+    process.on("exit", () => {
+      console.log("\nDone. Now run:\n\n  cd " + name);
+    });
   });
 
 program.parse(process.argv);
-
-process.on("exit", () => {
-  console.log(chalk.green("Done!"));
-});

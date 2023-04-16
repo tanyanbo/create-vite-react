@@ -119,17 +119,14 @@ function initVite(
     }
   );
 
+  let shouldLog = true;
   child.stdout?.on("data", (data) => {
-    console.log(data.toString());
-    console.log("-----------------------");
-    // const str = data.toString();
-    // if (str.includes("Initialized")) {
-    //   console.log(chalk.green(str));
-    // } else if (str.includes("Installing")) {
-    //   console.log(chalk.blue(str));
-    // } else {
-    //   console.log(str);
-    // }
+    const output = data.toString();
+    if (output.includes("Done. Now run:")) {
+      shouldLog = false;
+    } else if (shouldLog) {
+      console.log(data.toString());
+    }
   });
 
   child.on("close", () => {
@@ -205,8 +202,7 @@ function initEslint(useTypescript: boolean) {
   fs.writeFile(
     path.resolve(projectDirectory, ".eslintignore"),
     `node_modules
-commitlint.config.js
-vite.config.ts`
+vite.config.${useTypescript ? "t" : "j"}s`
   );
 }
 
