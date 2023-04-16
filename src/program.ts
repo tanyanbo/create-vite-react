@@ -28,17 +28,6 @@ const packageRunner = {
   pnpm: "pnpx",
 };
 
-const dependencies = [
-  "prettier",
-  "eslint",
-  "husky",
-  "lint-staged",
-  "@commitlint/cli",
-  "@commitlint/config-conventional",
-  "stylelint",
-  "stylelint-config-standard",
-];
-
 export async function run(options: Options) {
   console.log(chalk.green("Creating a Vite + React app..."));
 
@@ -75,23 +64,17 @@ export async function run(options: Options) {
   const projectName = (options.name || answers.projectName) as string;
   const useTypescript = options.typescript || answers.typescript === "yes";
 
-  if (useTypescript) {
-    dependencies.push("@typescript-eslint/parser");
-    dependencies.push("@typescript-eslint/eslint-plugin");
-  }
-  if (answers.css !== "none") {
-    dependencies.push(css);
-  }
-
   projectDirectory = path.resolve(process.cwd(), projectName);
 
-  return initVite(packageManager, projectName, useTypescript);
+  return initVite(packageManager, projectName, useTypescript, css, options);
 }
 
 async function initVite(
   packageManager: PackageManager,
   projectName: string,
-  useTypescript: boolean
+  useTypescript: boolean,
+  css: CssPreprocessor,
+  options: Options
 ) {
   return new Promise<string[]>((resolve) => {
     console.log(chalk.green("\nInitializing Vite..."));
@@ -136,7 +119,7 @@ async function initVite(
         stdio: "inherit",
       });
       deleteViteBoilerPlate();
-      installOtherDependencies(useTypescript, packageManager);
+      installOtherDependencies(useTypescript, packageManager, css, options);
       resolve(viteOutput);
     });
   });
@@ -160,8 +143,24 @@ async function deleteViteBoilerPlate() {
 
 function installOtherDependencies(
   useTypescript: boolean,
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  css: CssPreprocessor,
+  options: Options
 ) {
+  const dependencies = [
+    options.prettier && "prettier",
+    options.eslint && "eslint",
+    options.husky && "husky",
+    options.lintStaged && "lint-staged",
+    options.commitlint && "@commitlint/cli",
+    options.commitlint && "@commitlint/config-conventional",
+    options.stylelint && "stylelint",
+    options.stylelint && "stylelint-config-standard",
+    useTypescript && "@typescript-eslint/parser",
+    useTypescript && "@typescript-eslint/eslint-plugin",
+    css !== "none" && css,
+  ].filter((dependency) => typeof dependency !== "boolean");
+
   executeInProjectDirectory(
     `${packageManager} ${
       packageManager === "yarn" ? "add" : "install"
@@ -170,21 +169,22 @@ function installOtherDependencies(
     { stdio: "inherit" }
   );
   console.log(chalk.blue("Installed other dependencies\n"));
-  initDependencies(useTypescript, packageManager);
+  initDependencies(useTypescript, packageManager, options);
 }
 
 function initDependencies(
   useTypescript: boolean,
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  options: Options
 ) {
   console.log(chalk.green("Initializing other dependencies..."));
   initGit();
-  initPrettier();
-  initEslint(useTypescript);
-  initStylelint();
-  initHusky(packageManager);
-  initLintStaged();
-  initCommitLint();
+  if (options.prettier) initPrettier();
+  if (options.eslint) initEslint(useTypescript);
+  if (options.stylelint) initStylelint();
+  if (options.husky) initHusky(packageManager);
+  if (options.lintStaged) initLintStaged();
+  if (options.commitlint) initCommitLint();
 }
 
 function initGit() {

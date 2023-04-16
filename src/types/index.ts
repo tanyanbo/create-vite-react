@@ -13,4 +13,10 @@ export interface Options {
   packageManager?: PackageManager;
   css?: CssPreprocessor;
   typescript?: boolean;
+  prettier?: boolean;
+  eslint?: boolean;
+  stylelint?: boolean;
+  commitlint?: boolean;
+  lintStaged?: boolean;
+  husky?: boolean;
 }

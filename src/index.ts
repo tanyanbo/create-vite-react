@@ -28,6 +28,12 @@ program
     ).choices(["pnpm", "yarn", "npm"])
   )
   .option("--no-typescript", "do not use typescript")
+  .option("--no-prettier", "do not use prettier")
+  .option("--no-eslint", "do not use eslint")
+  .option("--no-stylelint", "do not use stylelint")
+  .option("--no-commitlint", "do not use commitlint")
+  .option("--no-lint-staged", "do not use lint staged")
+  .option("--no-husky", "do not use husky")
   .action(async (name, options) => {
     let viteOutput = await run({ name, ...options });
     const output = viteOutput.filter((line) => {
