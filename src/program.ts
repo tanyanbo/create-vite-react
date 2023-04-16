@@ -85,58 +85,60 @@ export async function run(options: Options) {
 
   projectDirectory = path.resolve(process.cwd(), projectName);
 
-  initVite(packageManager, projectName, useTypescript);
+  return initVite(packageManager, projectName, useTypescript);
 }
 
-function initVite(
+async function initVite(
   packageManager: PackageManager,
   projectName: string,
   useTypescript: boolean
 ) {
-  console.log(chalk.green("\nInitializing Vite..."));
+  return new Promise<string[]>((resolve) => {
+    console.log(chalk.green("\nInitializing Vite..."));
 
-  const vitePackage = packageManager === "npm" ? "vite@latest" : "vite";
-  const npmTemplate = packageManager === "npm" ? "--" : "";
-  const template = `react${useTypescript ? "-ts" : ""}`;
-  console.log(
-    [packageManager, "create", vitePackage, projectName, npmTemplate, template]
-      .filter((it) => !!it)
-      .join(" ")
-  );
+    const vitePackage = packageManager === "npm" ? "vite@latest" : "vite";
+    const npmTemplate = packageManager === "npm" ? "--" : "";
+    const template = `react${useTypescript ? "-ts" : ""}`;
 
-  const child = spawn(
-    packageManager,
-    [
-      "create",
-      vitePackage,
-      projectName,
-      npmTemplate,
-      "--template",
-      template,
-    ].filter((it) => !!it),
-    {
-      stdio: ["inherit", "pipe", "inherit"],
-    }
-  );
+    const child = spawn(
+      packageManager,
+      [
+        "create",
+        vitePackage,
+        projectName,
+        npmTemplate,
+        "--template",
+        template,
+      ].filter((it) => !!it),
+      {
+        stdio: ["inherit", "pipe", "inherit"],
+      }
+    );
 
-  let shouldLog = true;
-  child.stdout?.on("data", (data) => {
-    const output = data.toString();
-    if (output.includes("Done. Now run:")) {
-      shouldLog = false;
-    } else if (shouldLog) {
-      console.log(data.toString());
-    }
-  });
-
-  child.on("close", () => {
-    console.log(chalk.green("Initialized Vite\n"));
-    console.log(chalk.blue("Installing dependencies"));
-    executeInProjectDirectory(`${packageManager} install`, true, {
-      stdio: "inherit",
+    let shouldLog = true;
+    let viteOutput: string[] = [];
+    child.stdout?.on("data", (data) => {
+      const output = data.toString();
+      if (output.includes("Done. Now run:")) {
+        shouldLog = false;
+        viteOutput.push(output);
+      } else if (shouldLog) {
+        console.log(data.toString());
+      } else {
+        viteOutput.push(output);
+      }
     });
-    deleteViteBoilerPlate();
-    installOtherDependencies(useTypescript, packageManager);
+
+    child.on("close", () => {
+      console.log(chalk.green("Initialized Vite\n"));
+      console.log(chalk.blue("Installing dependencies"));
+      executeInProjectDirectory(`${packageManager} install`, true, {
+        stdio: "inherit",
+      });
+      deleteViteBoilerPlate();
+      installOtherDependencies(useTypescript, packageManager);
+      resolve(viteOutput);
+    });
   });
 }
 

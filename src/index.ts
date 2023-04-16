@@ -1,7 +1,6 @@
 import { Command, Option } from "commander";
 
 import { run } from "./program.js";
-import chalk from "chalk";
 
 const program = new Command();
 
@@ -29,11 +28,18 @@ program
     ).choices(["pnpm", "yarn", "npm"])
   )
   .option("--no-typescript", "do not use typescript")
-  .action((name, options) => {
-    run({ name, ...options });
-    process.on("exit", () => {
-      console.log("\nDone. Now run:\n\n  cd " + name);
+  .action(async (name, options) => {
+    let viteOutput = await run({ name, ...options });
+    const output = viteOutput.filter((line) => {
+      return !line.includes("Progress");
     });
+    try {
+      output[1] = output[1].replace(/[\r\n].*install[\r\n]/, "\n");
+    } finally {
+      process.on("exit", () => {
+        console.log(`${output.join("")}`);
+      });
+    }
   });
 
 program.parse(process.argv);
