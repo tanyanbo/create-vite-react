@@ -1,6 +1,7 @@
 import { Command, Option } from "commander";
 
 import { run } from "./program.js";
+import chalk from "chalk";
 
 const program = new Command();
 
@@ -29,9 +30,11 @@ program
   )
   .option("--no-typescript", "do not use typescript")
   .action((name, options) => {
-    console.log(name);
-    console.log(options);
     run({ name, ...options });
   });
 
 program.parse();
+
+process.on("exit", () => {
+  console.log(chalk.green("Done!"));
+});

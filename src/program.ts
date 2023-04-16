@@ -86,7 +86,10 @@ export async function run(options: Options) {
   projectDirectory = path.resolve(process.cwd(), projectName);
 
   initVite(packageManager, projectName, useTypescript);
-  installDependencies(packageManager);
+
+  installOtherDependencies(packageManager);
+
+  console.log(chalk.green("Initializing other dependencies..."));
   initGit();
   initPrettier();
   initEslint(useTypescript);
@@ -101,14 +104,22 @@ function initVite(
   projectName: string,
   useTypescript: boolean
 ) {
+  console.log(chalk.green("\nInitializing Vite..."));
   execSync(
     `${packageManager} create vite${
       packageManager === "npm" ? "@latest" : ""
     } ${projectName} ${packageManager === "npm" ? "--" : ""} --template react${
       useTypescript ? "-ts" : ""
-    }`
+    }`,
+    {
+      stdio: "inherit",
+    }
   );
-  executeInProjectDirectory(`${packageManager} install`, true);
+  console.log(chalk.green("Initialized Vite\n"));
+  console.log(chalk.blue("Installing dependencies"));
+  executeInProjectDirectory(`${packageManager} install`, true, {
+    stdio: "inherit",
+  });
   deleteViteBoilerPlate();
 }
 
@@ -128,13 +139,15 @@ async function deleteViteBoilerPlate() {
   }
 }
 
-function installDependencies(packageManager: PackageManager) {
+function installOtherDependencies(packageManager: PackageManager) {
   executeInProjectDirectory(
     `${packageManager} ${
       packageManager === "yarn" ? "add" : "install"
     } -D ${dependencies.join(" ")}`,
-    true
+    true,
+    { stdio: "inherit" }
   );
+  console.log(chalk.blue("Installed other dependencies\n"));
 }
 
 function initGit() {
@@ -187,10 +200,14 @@ function initCommitLint() {
   );
 }
 
-function executeInProjectDirectory(command: string, sync: boolean = false) {
+function executeInProjectDirectory(
+  command: string,
+  sync: boolean = false,
+  options?: Parameters<typeof exec>[1] | Parameters<typeof execSync>[1]
+) {
   if (sync) {
-    exec(command, { cwd: projectDirectory });
+    execSync(command, { cwd: projectDirectory, ...options });
   } else {
-    execSync(command, { cwd: projectDirectory });
+    exec(command, { cwd: projectDirectory, ...options });
   }
 }
