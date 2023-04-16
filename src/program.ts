@@ -1,6 +1,6 @@
 import fs from "fs/promises";
 import path from "path";
-import { exec, execSync } from "child_process";
+import { exec, execSync, spawn } from "child_process";
 
 import inquirer from "inquirer";
 import chalk from "chalk";
@@ -86,17 +86,6 @@ export async function run(options: Options) {
   projectDirectory = path.resolve(process.cwd(), projectName);
 
   initVite(packageManager, projectName, useTypescript);
-
-  installOtherDependencies(packageManager);
-
-  console.log(chalk.green("Initializing other dependencies..."));
-  initGit();
-  initPrettier();
-  initEslint(useTypescript);
-  initStylelint();
-  initHusky(packageManager);
-  initLintStaged();
-  initCommitLint();
 }
 
 function initVite(
@@ -105,22 +94,53 @@ function initVite(
   useTypescript: boolean
 ) {
   console.log(chalk.green("\nInitializing Vite..."));
-  execSync(
-    `${packageManager} create vite${
-      packageManager === "npm" ? "@latest" : ""
-    } ${projectName} ${packageManager === "npm" ? "--" : ""} --template react${
-      useTypescript ? "-ts" : ""
-    }`,
+
+  const vitePackage = packageManager === "npm" ? "vite@latest" : "vite";
+  const npmTemplate = packageManager === "npm" ? "--" : "";
+  const template = `react${useTypescript ? "-ts" : ""}`;
+  console.log(
+    [packageManager, "create", vitePackage, projectName, npmTemplate, template]
+      .filter((it) => !!it)
+      .join(" ")
+  );
+
+  const child = spawn(
+    packageManager,
+    [
+      "create",
+      vitePackage,
+      projectName,
+      npmTemplate,
+      "--template",
+      template,
+    ].filter((it) => !!it),
     {
-      stdio: "inherit",
+      stdio: ["inherit", "pipe", "inherit"],
     }
   );
-  console.log(chalk.green("Initialized Vite\n"));
-  console.log(chalk.blue("Installing dependencies"));
-  executeInProjectDirectory(`${packageManager} install`, true, {
-    stdio: "inherit",
+
+  child.stdout?.on("data", (data) => {
+    console.log(data.toString());
+    console.log("-----------------------");
+    // const str = data.toString();
+    // if (str.includes("Initialized")) {
+    //   console.log(chalk.green(str));
+    // } else if (str.includes("Installing")) {
+    //   console.log(chalk.blue(str));
+    // } else {
+    //   console.log(str);
+    // }
   });
-  deleteViteBoilerPlate();
+
+  child.on("close", () => {
+    console.log(chalk.green("Initialized Vite\n"));
+    console.log(chalk.blue("Installing dependencies"));
+    executeInProjectDirectory(`${packageManager} install`, true, {
+      stdio: "inherit",
+    });
+    deleteViteBoilerPlate();
+    installOtherDependencies(useTypescript, packageManager);
+  });
 }
 
 async function deleteViteBoilerPlate() {
@@ -139,7 +159,10 @@ async function deleteViteBoilerPlate() {
   }
 }
 
-function installOtherDependencies(packageManager: PackageManager) {
+function installOtherDependencies(
+  useTypescript: boolean,
+  packageManager: PackageManager
+) {
   executeInProjectDirectory(
     `${packageManager} ${
       packageManager === "yarn" ? "add" : "install"
@@ -148,6 +171,21 @@ function installOtherDependencies(packageManager: PackageManager) {
     { stdio: "inherit" }
   );
   console.log(chalk.blue("Installed other dependencies\n"));
+  initDependencies(useTypescript, packageManager);
+}
+
+function initDependencies(
+  useTypescript: boolean,
+  packageManager: PackageManager
+) {
+  console.log(chalk.green("Initializing other dependencies..."));
+  initGit();
+  initPrettier();
+  initEslint(useTypescript);
+  initStylelint();
+  initHusky(packageManager);
+  initLintStaged();
+  initCommitLint();
 }
 
 function initGit() {

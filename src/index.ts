@@ -33,7 +33,7 @@ program
     run({ name, ...options });
   });
 
-program.parse();
+program.parse(process.argv);
 
 process.on("exit", () => {
   console.log(chalk.green("Done!"));
