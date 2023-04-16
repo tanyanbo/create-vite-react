@@ -4,10 +4,10 @@
 SCRIPT_PATH="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 
 # Define a relative path
-RELATIVE_PATH="../src/index.ts"
+RELATIVE_PATH="../dist/index.js"
 
 # Combine the script path with the relative path
 TARGET_PATH="${SCRIPT_PATH}/${RELATIVE_PATH}"
 
 # Run the target script
-pnpx ts-node --esm ${TARGET_PATH}
+node ${TARGET_PATH} create

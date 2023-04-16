@@ -1,172 +1,37 @@
-import fs from "fs/promises";
-import path from "path";
+import { Command, Option } from "commander";
 
-import inquirer from "inquirer";
-import { exec, execSync } from "child_process";
+import { run } from "./program.js";
 
-import gitIgnore from "./templates/git-ignore.js";
-import prettierrc from "./templates/prettierrc.js";
-import lintstagedrc from "./templates/lintstagedrc.js";
-import commitlintrc from "./templates/commitlintrc.js";
-import { typescriptConfig, javascriptConfig } from "./templates/eslintrc.js";
-import stylelintrc from "./templates/stylelintrc.js";
-import mainTsx from "./templates/mainTsx.js";
-import AppTsx from "./templates/AppTsx.js";
+const program = new Command();
 
-interface Answers {
-  projectName: string;
-  packageManager: "npm" | "yarn" | "pnpm";
-  css: "less" | "sass" | "stylus" | "none";
-  typescript: "yes" | "no";
-}
+program
+  .name("Create Vite + React app")
+  .description("CLI to create a Vite + React app")
+  .version("1.0.0");
 
-let projectDirectory: string;
+program
+  .command("create")
+  .description("Creating a Vite + React app")
+  .argument("[name]", "name of app")
+  .addOption(
+    new Option("-c, --css <type>", "type of css preprocessor to use").choices([
+      "less",
+      "sass",
+      "stylus",
+      "none",
+    ])
+  )
+  .addOption(
+    new Option(
+      "-p, --package-manager <manager>",
+      "package manager to use"
+    ).choices(["pnpm", "yarn", "npm"])
+  )
+  .option("--no-typescript", "do not use typescript")
+  .action((name, options) => {
+    console.log(name);
+    console.log(options);
+    // run({ name, ...options });
+  });
 
-const packageRunner = {
-  npm: "npx",
-  yarn: "yarn",
-  pnpm: "pnpx",
-};
-
-async function main() {
-  const questions = [
-    {
-      name: "projectName",
-      message: "What is the name of your project?",
-      default: "vite-react-app",
-    },
-    {
-      name: "packageManager",
-      message: "Which package manager do you want to use?",
-      type: "list",
-      choices: ["pnpm", "yarn", "npm"],
-    },
-    {
-      name: "css",
-      message: "Which css preprocessor do you want to use?",
-      type: "list",
-      choices: ["less", "sass", "stylus", "none"],
-    },
-    {
-      name: "typescript",
-      message: "Do you want to use typescript?",
-      type: "list",
-      choices: ["yes", "no"],
-    },
-  ];
-
-  const answers = await inquirer.prompt<Answers>(questions);
-  const useTypescript = answers.typescript === "yes";
-  projectDirectory = path.resolve(process.cwd(), answers.projectName);
-
-  initVite(answers, useTypescript);
-  installDependencies(answers, useTypescript);
-  initGit();
-  initPrettier();
-  initEslint(useTypescript);
-  initStylelint();
-  initHusky(answers.packageManager);
-  initLintStaged();
-  initCommitLint();
-}
-
-function initVite(answers: Answers, useTypescript: boolean) {
-  execSync(
-    `${answers.packageManager} create vite${
-      answers.packageManager === "npm" ? "@latest" : ""
-    } ${answers.projectName} ${
-      answers.packageManager === "npm" ? "--" : ""
-    } --template react${useTypescript ? "-ts" : ""}`
-  );
-  executeInProjectDirectory(`${answers.packageManager} install`, true);
-  deleteViteBoilerPlate();
-}
-
-async function deleteViteBoilerPlate() {
-  try {
-    fs.rm(path.resolve(projectDirectory, "src/App.tsx"));
-    fs.rm(path.resolve(projectDirectory, "src/main.tsx"));
-    fs.rm(path.resolve(projectDirectory, "src/App.css"));
-    fs.rm(path.resolve(projectDirectory, "src/index.css"));
-    await fs.rm(path.resolve(projectDirectory, "src/assets/react.svg"));
-    fs.rmdir(path.resolve(projectDirectory, "src/assets"));
-    await fs.rm(path.resolve(projectDirectory, "public/vite.svg"));
-    fs.rmdir(path.resolve(projectDirectory, "public"));
-  } finally {
-    fs.writeFile(path.resolve(projectDirectory, "src/App.tsx"), AppTsx);
-    fs.writeFile(path.resolve(projectDirectory, "src/main.tsx"), mainTsx);
-  }
-}
-
-function installDependencies(answers: Answers, useTypescript: boolean) {
-  executeInProjectDirectory(
-    `${answers.packageManager} ${
-      answers.packageManager === "yarn" ? "add" : "install"
-    } -D prettier eslint husky lint-staged @commitlint/cli @commitlint/config-conventional stylelint stylelint-config-standard ${
-      useTypescript
-        ? "@typescript-eslint/parser @typescript-eslint/eslint-plugin"
-        : ""
-    } ${answers.css !== "none" ? answers.css : ""}`,
-    true
-  );
-}
-
-function initGit() {
-  executeInProjectDirectory("git init");
-  fs.writeFile(path.resolve(projectDirectory, ".gitignore"), gitIgnore);
-}
-
-function initPrettier() {
-  fs.writeFile(path.resolve(projectDirectory, ".prettierrc.json"), prettierrc);
-}
-
-function initEslint(useTypescript: boolean) {
-  fs.writeFile(
-    path.resolve(projectDirectory, ".eslintrc.json"),
-    useTypescript ? typescriptConfig : javascriptConfig
-  );
-  fs.writeFile(
-    path.resolve(projectDirectory, ".eslintignore"),
-    `node_modules
-commitlint.config.js
-vite.config.ts`
-  );
-}
-
-function initStylelint() {
-  fs.writeFile(
-    path.resolve(projectDirectory, ".stylelintrc.json"),
-    stylelintrc
-  );
-}
-
-function initHusky(packageManager: Answers["packageManager"]) {
-  executeInProjectDirectory(`${packageRunner[packageManager]} husky install`);
-  executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/pre-commit "pnpm lint-staged"`
-  );
-  executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'`
-  );
-}
-
-function initLintStaged() {
-  fs.writeFile(path.resolve(projectDirectory, ".lintstagedrc"), lintstagedrc);
-}
-
-function initCommitLint() {
-  fs.writeFile(
-    path.resolve(projectDirectory, ".commitlintrc.json"),
-    commitlintrc
-  );
-}
-
-function executeInProjectDirectory(command: string, sync: boolean = false) {
-  if (sync) {
-    exec(command, { cwd: projectDirectory });
-  } else {
-    execSync(command, { cwd: projectDirectory });
-  }
-}
-
-main();
+program.parse();
