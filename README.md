@@ -41,6 +41,12 @@ You can customize your project setup with the following options:
 - `c, --css <type>`: Choose a CSS preprocessor (less, sass, stylus, none)
 - `p, --package-manager <manager>`: Choose a package manager (pnpm, yarn, npm)
 - `--no-typescript`: Do not use TypeScript
+- `--no-prettier`: Do not use Prettier
+- `--no-eslint`: Do not use Eslint
+- `--no-stylelint`: Do not use Stylelint
+- `--no-husky`: Do not use Husky
+- `--no-commitlint`: Do not use Commitlint
+- `--no-lint-staged`: Do not use Lint staged
 
 For example, to create a new Vite + React app with TypeScript, Sass, and yarn, run:
 
