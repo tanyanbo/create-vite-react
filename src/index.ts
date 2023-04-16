@@ -31,7 +31,7 @@ program
   .action((name, options) => {
     console.log(name);
     console.log(options);
-    // run({ name, ...options });
+    run({ name, ...options });
   });
 
 program.parse();

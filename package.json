@@ -4,6 +4,9 @@
   "description": "Create a vite + react app",
   "main": "index.js",
   "type": "module",
+  "bin": {
+    "create-vite-react": "./bin/create-vite-react.js"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node ./dist/index.js",
