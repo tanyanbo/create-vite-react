@@ -1,6 +1,6 @@
 {
   "name": "create-vite-react",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Create a vite + react app",
   "main": "index.js",
   "type": "module",
