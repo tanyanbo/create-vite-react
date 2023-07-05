@@ -7,7 +7,7 @@ import chalk from "chalk";
 
 import gitIgnore from "./templates/git-ignore.js";
 import prettierrc from "./templates/prettierrc.js";
-import getLintstagedrc from "./templates/lintstagedrc.js";
+import lintstagedrc from "./templates/lintstagedrc.js";
 import commitlintrc from "./templates/commitlintrc.js";
 import { typescriptConfig, javascriptConfig } from "./templates/eslintrc.js";
 import stylelintrc from "./templates/stylelintrc.js";
@@ -169,26 +169,26 @@ function installOtherDependencies(
     { stdio: "inherit" }
   );
   console.log(chalk.blue("Installed other dependencies\n"));
-  initDependencies(useTypescript, options, packageManager);
+  initDependencies(useTypescript, packageManager, options);
 }
 
 function initDependencies(
   useTypescript: boolean,
-  options: Options,
-  packageManager: PackageManager
+  packageManager: PackageManager,
+  options: Options
 ) {
   console.log(chalk.green("Initializing other dependencies..."));
   initGit();
   if (options.prettier) initPrettier();
   if (options.eslint) initEslint(useTypescript);
   if (options.stylelint) initStylelint();
-  if (options.husky) initHusky();
-  if (options.lintStaged) initLintStaged(packageManager);
+  if (options.husky) initHusky(packageManager);
+  if (options.lintStaged) initLintStaged();
   if (options.commitlint) initCommitLint();
 }
 
 function initGit() {
-  executeInProjectDirectory("git init", true);
+  executeInProjectDirectory("git init");
   fs.writeFile(path.resolve(projectDirectory, ".gitignore"), gitIgnore);
 }
 
@@ -215,25 +215,18 @@ function initStylelint() {
   );
 }
 
-function initHusky() {
-  executeInProjectDirectory(`npx husky install`, true);
+function initHusky(packageManager: PackageManager) {
+  executeInProjectDirectory(`${packageRunner[packageManager]} husky install`);
   executeInProjectDirectory(
-    `npx husky add .husky/pre-commit "pnpm lint-staged"`,
-    true
+    `${packageRunner[packageManager]} husky add .husky/pre-commit "pnpm lint-staged"`
   );
-  executeInProjectDirectory(`npx husky install`, true);
   executeInProjectDirectory(
-    `npx husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'`,
-    true
+    `${packageRunner[packageManager]} husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'`
   );
-  executeInProjectDirectory(`npx husky install`, true);
 }
 
-function initLintStaged(packageManager: PackageManager) {
-  fs.writeFile(
-    path.resolve(projectDirectory, ".lintstagedrc"),
-    getLintstagedrc(packageManager)
-  );
+function initLintStaged() {
+  fs.writeFile(path.resolve(projectDirectory, ".lintstagedrc"), lintstagedrc);
 }
 
 function initCommitLint() {

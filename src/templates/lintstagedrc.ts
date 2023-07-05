@@ -1,8 +1,4 @@
-import { PackageManager } from "../types/index.js";
-
-export default function (packageManager: PackageManager) {
-  return `{
-  "src/**/*.{js,jsx,ts,tsx}": ["${packageManager} lint", "prettier --write"],
-  "src/**/*.{css,sass,scss,less,stylus}": ["stylelint", "prettier --write"]
+export default `{
+  "*.{js,jsx,ts,tsx}": ["eslint", "prettier --write"],
+  "*.{css,sass,scss,less,stylus}": ["stylelint", "prettier --write"]
 }`;
-}
