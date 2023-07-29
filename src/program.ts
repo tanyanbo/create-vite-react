@@ -9,7 +9,6 @@ import gitIgnore from "./templates/git-ignore.js";
 import prettierrc from "./templates/prettierrc.js";
 import lintstagedrc from "./templates/lintstagedrc.js";
 import commitlintrc from "./templates/commitlintrc.js";
-import { typescriptConfig, javascriptConfig } from "./templates/eslintrc.js";
 import stylelintrc from "./templates/stylelintrc.js";
 import mainTsx from "./templates/mainTsx.js";
 import AppTsx from "./templates/AppTsx.js";
@@ -74,7 +73,7 @@ async function initVite(
   projectName: string,
   useTypescript: boolean,
   css: CssPreprocessor,
-  options: Options
+  options: Options,
 ) {
   return new Promise<string[]>((resolve) => {
     console.log(chalk.green("\nInitializing Vite..."));
@@ -95,11 +94,11 @@ async function initVite(
       ].filter((it) => !!it),
       {
         stdio: ["inherit", "pipe", "inherit"],
-      }
+      },
     );
 
     let shouldLog = true;
-    let viteOutput: string[] = [];
+    const viteOutput: string[] = [];
     child.stdout?.on("data", (data) => {
       const output = data.toString();
       if (output.includes("Done. Now run:")) {
@@ -145,28 +144,28 @@ function installOtherDependencies(
   useTypescript: boolean,
   packageManager: PackageManager,
   css: CssPreprocessor,
-  options: Options
+  options: Options,
 ) {
   const dependencies = [
     options.prettier && "prettier",
     options.eslint && "eslint",
+    options.eslint && "eslint-plugin-react",
     options.husky && "husky",
     options.lintStaged && "lint-staged",
     options.commitlint && "@commitlint/cli",
     options.commitlint && "@commitlint/config-conventional",
     options.stylelint && "stylelint",
     options.stylelint && "stylelint-config-standard",
-    useTypescript && "@typescript-eslint/parser",
-    useTypescript && "@typescript-eslint/eslint-plugin",
+    useTypescript && options.eslint && "@typescript-eslint/parser",
+    useTypescript && options.eslint && "@typescript-eslint/eslint-plugin",
     css !== "none" && css,
   ].filter((dependency) => typeof dependency !== "boolean");
 
   executeInProjectDirectory(
-    `${packageManager} ${
-      packageManager === "yarn" ? "add" : "install"
+    `${packageManager} ${packageManager === "yarn" ? "add" : "install"
     } -D ${dependencies.join(" ")}`,
     true,
-    { stdio: "inherit" }
+    { stdio: "inherit" },
   );
   console.log(chalk.blue("Installed other dependencies\n"));
   initDependencies(useTypescript, packageManager, options);
@@ -175,7 +174,7 @@ function installOtherDependencies(
 function initDependencies(
   useTypescript: boolean,
   packageManager: PackageManager,
-  options: Options
+  options: Options,
 ) {
   console.log(chalk.green("Initializing other dependencies..."));
   initGit();
@@ -198,30 +197,26 @@ function initPrettier() {
 
 function initEslint(useTypescript: boolean) {
   fs.writeFile(
-    path.resolve(projectDirectory, ".eslintrc.json"),
-    useTypescript ? typescriptConfig : javascriptConfig
-  );
-  fs.writeFile(
     path.resolve(projectDirectory, ".eslintignore"),
     `node_modules
-vite.config.${useTypescript ? "t" : "j"}s`
+vite.config.${useTypescript ? "t" : "j"}s`,
   );
 }
 
 function initStylelint() {
   fs.writeFile(
     path.resolve(projectDirectory, ".stylelintrc.json"),
-    stylelintrc
+    stylelintrc,
   );
 }
 
 function initHusky(packageManager: PackageManager) {
   executeInProjectDirectory(`${packageRunner[packageManager]} husky install`);
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/pre-commit "pnpm lint-staged"`
+    `${packageRunner[packageManager]} husky add .husky/pre-commit "pnpm lint-staged"`,
   );
   executeInProjectDirectory(
-    `${packageRunner[packageManager]} husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'`
+    `${packageRunner[packageManager]} husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'`,
   );
 }
 
@@ -232,14 +227,14 @@ function initLintStaged() {
 function initCommitLint() {
   fs.writeFile(
     path.resolve(projectDirectory, ".commitlintrc.json"),
-    commitlintrc
+    commitlintrc,
   );
 }
 
 function executeInProjectDirectory(
   command: string,
   sync: boolean = false,
-  options?: Parameters<typeof exec>[1] | Parameters<typeof execSync>[1]
+  options?: Parameters<typeof exec>[1] | Parameters<typeof execSync>[1],
 ) {
   if (sync) {
     execSync(command, { cwd: projectDirectory, ...options });

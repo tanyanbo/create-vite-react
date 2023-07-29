@@ -19,13 +19,13 @@ program
       "sass",
       "stylus",
       "none",
-    ])
+    ]),
   )
   .addOption(
     new Option(
       "-p, --package-manager <manager>",
-      "package manager to use"
-    ).choices(["pnpm", "yarn", "npm"])
+      "package manager to use",
+    ).choices(["pnpm", "yarn", "npm"]),
   )
   .option("--no-typescript", "do not use typescript")
   .option("--no-prettier", "do not use prettier")
@@ -35,7 +35,7 @@ program
   .option("--no-lint-staged", "do not use lint staged")
   .option("--no-husky", "do not use husky")
   .action(async (name, options) => {
-    let viteOutput = await run({ name, ...options });
+    const viteOutput = await run({ name, ...options });
     const output = viteOutput.filter((line) => {
       return !line.includes("Progress");
     });
