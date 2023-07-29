@@ -207,12 +207,17 @@ function initStylelint() {
 }
 
 function initHusky(packageManager: PackageManager) {
-  executeInProjectDirectory(`${packageRunner[packageManager]} husky install`);
+  executeInProjectDirectory(
+    `${packageRunner[packageManager]} husky install`,
+    true,
+  );
   executeInProjectDirectory(
     `${packageRunner[packageManager]} husky add .husky/pre-commit "pnpm lint-staged"`,
+    true,
   );
   executeInProjectDirectory(
     `${packageRunner[packageManager]} husky add .husky/commit-msg 'npx --no -- commitlint --edit "$1"'`,
+    true,
   );
 }
 
