@@ -148,16 +148,12 @@ function installOtherDependencies(
 ) {
   const dependencies = [
     options.prettier && "prettier",
-    options.eslint && "eslint",
-    options.eslint && "eslint-plugin-react",
     options.husky && "husky",
     options.lintStaged && "lint-staged",
     options.commitlint && "@commitlint/cli",
     options.commitlint && "@commitlint/config-conventional",
     options.stylelint && "stylelint",
     options.stylelint && "stylelint-config-standard",
-    useTypescript && options.eslint && "@typescript-eslint/parser",
-    useTypescript && options.eslint && "@typescript-eslint/eslint-plugin",
     css !== "none" && css,
   ].filter((dependency) => typeof dependency !== "boolean");
 
